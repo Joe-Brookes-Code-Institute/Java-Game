@@ -2,6 +2,37 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
+// Load player sprites
+const playerSprites = [
+    new Image(),
+    new Image()
+];
+playerSprites[0].src = 'assets/images/player-sprite1.png';
+playerSprites[1].src = 'assets/images/player-sprite2.png';
+
+// Load invader sprites
+const invaderSprites = [
+    new Image(),
+    new Image()
+];
+invaderSprites[0].src = 'assets/images/invader-sprite1.png';
+invaderSprites[1].src = 'assets/images/invader-sprite2.png';
+
+const orangeInvaderSprites = [
+    new Image(),
+    new Image()
+];
+orangeInvaderSprites[0].src = 'assets/images/orange-invader-sprite1.png';
+orangeInvaderSprites[1].src = 'assets/images/orange-invader-sprite2.png';
+
+// Load bullet and power-up sprites
+const bulletSprite = new Image();
+bulletSprite.src = 'assets/images/bullet-sprite.png';
+
+const powerUpSprite = new Image();
+powerUpSprite.src = 'assets/images/power-up-sprite.png';
+
+
 // Set canvas dimensions
 canvas.width = 600;
 canvas.height = 800;
@@ -10,11 +41,20 @@ canvas.height = 800;
 const playerSprite = new Image();
 playerSprite.src = 'assets/images/player-sprite.png';
 
-// Load invader sprites (assumed paths)
+// Load invader sprites
 const invaderSprite = new Image();
-invaderSprite.src = 'path/to/invader-sprite.png';
+invaderSprite.src = 'assets/images/invader-sprite.png';
+
 const orangeInvaderSprite = new Image();
-orangeInvaderSprite.src = 'path/to/orange-invader-sprite.png';
+orangeInvaderSprite.src = 'assets/images/orange-invader-sprite.png';
+
+// Load background image
+const backgroundImage = new Image();
+backgroundImage.src = 'assets/images/background.png';
+
+// Background scroll variables
+let bgY = 0;
+const bgScrollSpeed = 1; // Adjust the speed of the scrolling background
 
 // Player object with properties including ammo
 const player = {
@@ -54,20 +94,59 @@ const invaderSpeed = 1;
 let blackout = false; // Flag to indicate blackout
 let blackoutTimer = 0; // Timer for blackout duration
 let flashingInvader = null; // Reference to the current flashing invader
+let isSlowedDown = false; // Slowdown flag
+let slowdownTimer = 0; // Timer for slowdown effect
+const slowdownDuration = 60; // Duration of the slowdown in frames
+const slowdownFactor = 0.5; // Slowdown factor (50% speed)
+const POWER_UP_PROBABILITY = 0.01; // Probability of generating a power-up
 
 // Create a new invader object
+// Constants for invader sizes
+const invaderSizes = {
+    1: { width: 38, height: 70 }, // Orange invader
+    2: { width: 50, height: 60 }, // Flashing invader
+    3: { width: 60, height: 70 }  // Standard invader
+};
+
+// Create a new invader object with different sizes
 function createInvader(type) {
+    const size = invaderSizes[type];
     return {
-        x: Math.random() * (canvas.width - invaderWidth),
-        y: Math.random() * (canvas.height / 2 - invaderHeight),
+        x: Math.random() * (canvas.width - size.width),
+        y: Math.random() * (canvas.height / 2 - size.height),
+        width: size.width,
+        height: size.height,
         status: 1,
         type: type,
         flashTimer: 0,
-        chargeSpeed: 1.8, // Falling speed for orange invaders
-        dx: invaderSpeed * (Math.random() > 0.5 ? 1 : -1), // Random initial direction
-        isRed: false, // Flag to indicate if the invader has turned red
-        rechargeTimer: 0 // Timer for recharging after blackout
+        chargeSpeed: 1.8,
+        dx: invaderSpeed * (Math.random() > 0.5 ? 1 : -1),
+        isRed: false,
+        rechargeTimer: 0
     };
+}
+
+// Draw invaders on the canvas with their respective sizes
+function drawInvaders() {
+    for (const invader of invaders) {
+        if (invader.status === 1) {
+            if (invader.type === 2) {
+                ctx.fillStyle = invader.flashTimer % 2 === 0 ? 'yellow' : 'orange'; // Flashing invader
+            } else {
+                ctx.fillStyle = 'white'; // Standard invader
+            }
+            ctx.drawImage(invaderSprite, invader.x, invader.y, invader.width, invader.height);
+        
+                
+        }
+    }
+    for (const orangeInvader of orangeInvaders) {
+        if (orangeInvader.status === 1) {
+            ctx.fillStyle = orangeInvader.isRed ? 'red' : 'orange'; // Orange invader
+            ctx.fillRect(orangeInvader.x, orangeInvader.y, orangeInvader.width, orangeInvader.height);
+            
+        }
+    }
 }
 
 // Create a new power-up object that grants ammo
@@ -126,26 +205,6 @@ function drawInvaderBullets() {
     }
 }
 
-// Draw invaders on the canvas
-function drawInvaders() {
-    for (const invader of invaders) {
-        if (invader.status === 1) {
-            if (invader.type === 2) {
-                ctx.fillStyle = invader.flashTimer % 2 === 0 ? 'yellow' : 'orange'; // Type 2 - Flashing invader
-            } else {
-                ctx.fillStyle = 'white'; // Type 3 - Standard invader
-            }
-            ctx.fillRect(invader.x, invader.y, invaderWidth, invaderHeight);
-        }
-    }
-
-    for (const orangeInvader of orangeInvaders) {
-        if (orangeInvader.status === 1) {
-            ctx.fillStyle = orangeInvader.isRed ? 'red' : 'orange'; // Orange invader
-            ctx.fillRect(orangeInvader.x, orangeInvader.y, invaderWidth, invaderHeight);
-        }
-    }
-}
 
 // Draw power-ups on the canvas
 function drawPowerUps() {
@@ -315,13 +374,13 @@ function collisionDetection() {
                     bullet.y > invader.y && bullet.y < invader.y + invaderHeight) {
                     bullets.splice(i, 1);
                     invader.status = 0;
-                    player.score += 100; // Increase score when an invader is defeated
+                    player.score += 100;
                     Object.assign(invader, createInvader(invader === flashingInvader ? 2 : 3));
                 }
             }
         }
     }
-
+    // Similar logic for orangeInvaders and player collision
     for (const orangeInvader of orangeInvaders) {
         if (orangeInvader.status === 1) {
             for (let i = bullets.length - 1; i >= 0; i--) {
@@ -372,8 +431,8 @@ function collisionDetection() {
 
 // Update the game state every frame
 function update() {
+    
     const speedMultiplier = isSlowedDown ? slowdownFactor : 1;
-
     movePlayer(speedMultiplier);
     moveBullets(speedMultiplier);
     moveInvaderBullets(speedMultiplier);
@@ -381,22 +440,19 @@ function update() {
     movePowerUps(speedMultiplier);
     checkPowerUpCollision();
     collisionDetection();
-
+    
     if (blackout) {
         blackoutTimer--;
         if (blackoutTimer <= 0) {
             blackout = false;
         }
     }
-
     if (isSlowedDown) {
         slowdownTimer--;
         if (slowdownTimer <= 0) {
             isSlowedDown = false;
         }
     }
-
-    // Player continuous shooting by holding spacebar
     player.shootTimer++;
     if (player.shootTimer >= player.shootInterval && player.ammo > 0 && player.isShooting) {
         player.shootTimer = 0;
@@ -407,12 +463,12 @@ function update() {
             height: 10,
             speed: 7 * speedMultiplier
         });
-        player.ammo--; // Decrease ammo by 1 for each shot
+        player.ammo--;
     }
-
-    // Randomly generate power-ups
-    if (Math.random() < 0.01) {
+    if (Math.random() < POWER_UP_PROBABILITY) {
         powerUps.push(createPowerUp());
+        
+
     }
 }
 
@@ -432,7 +488,10 @@ function draw() {
     }
 }
 
+
+
 // The main game loop that updates and draws the game state
+// Main game loop
 function loop() {
     update();
     draw();
@@ -448,7 +507,7 @@ function keyDown(e) {
     } else if (e.key === 'Control' && !player.isJumping) {
         player.isJumping = true;
         player.dy = -15;
-    } else if (e.key === ' ') { // Spacebar for shooting
+    } else if (e.key === ' ' && player.ammo > 0) {
         player.isShooting = true;
     }
 }
@@ -465,6 +524,8 @@ function keyUp(e) {
 // Attach event listeners for keyboard input
 document.addEventListener('keydown', keyDown);
 document.addEventListener('keyup', keyUp);
+
+
 
 // Initialize the game and start the game loop
 initializeInvaders();
