@@ -1,19 +1,22 @@
+// Get the canvas and context
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
+// Set canvas dimensions
 canvas.width = 600;
 canvas.height = 800;
 
+// Load player sprite
 const playerSprite = new Image();
 playerSprite.src = 'assets/images/player-sprite.png';
 
+// Load invader sprites (assumed paths)
 const invaderSprite = new Image();
 invaderSprite.src = 'path/to/invader-sprite.png';
-
 const orangeInvaderSprite = new Image();
 orangeInvaderSprite.src = 'path/to/orange-invader-sprite.png';
 
-// Player object
+// Player object with properties including ammo
 const player = {
     x: canvas.width / 2 - 15,
     y: canvas.height - 30,
@@ -28,24 +31,31 @@ const player = {
     shootInterval: 20, // Shooting interval in frames
     shootTimer: 0,
     lives: 3, // Player lives
-    score: 0 // Player score
+    score: 0, // Player score
+    ammo: 10, // Starting ammo
+    isShooting: false // Flag to track if the player is holding the shoot button
 };
 
+// Arrays to hold various game objects
 const bullets = [];
 const invaderBullets = [];
 const invaders = [];
-const orangeInvaders = []; // Change from blue to orange
+const orangeInvaders = []; // Array for orange invaders
 const powerUps = []; // Array for power-ups
 
+// Constants for invader behavior
 const maxFallingOrangeInvaders = 1; // Maximum number of orange invaders falling at once
 const totalNonOrangeInvaders = 5; // Total number of non-orange invaders
 const invaderWidth = 60;
 const invaderHeight = 60;
 const invaderSpeed = 1;
+
+// Flags for game states
 let blackout = false; // Flag to indicate blackout
 let blackoutTimer = 0; // Timer for blackout duration
 let flashingInvader = null; // Reference to the current flashing invader
 
+// Create a new invader object
 function createInvader(type) {
     return {
         x: Math.random() * (canvas.width - invaderWidth),
@@ -53,24 +63,26 @@ function createInvader(type) {
         status: 1,
         type: type,
         flashTimer: 0,
-        chargeSpeed: 0.2, // Slower falling speed for orange invaders
+        chargeSpeed: 1.8, // Falling speed for orange invaders
         dx: invaderSpeed * (Math.random() > 0.5 ? 1 : -1), // Random initial direction
         isRed: false, // Flag to indicate if the invader has turned red
         rechargeTimer: 0 // Timer for recharging after blackout
     };
 }
 
+// Create a new power-up object that grants ammo
 function createPowerUp() {
     return {
         x: Math.random() * (canvas.width - 20),
         y: 0,
         width: 20,
         height: 20,
-        type: 'fasterShooting', // Example power-up type
+        type: 'ammo', // Power-up type is now ammo
         speed: 2
     };
 }
 
+// Initialize invaders at the start of the game
 function initializeInvaders() {
     let flashingCount = 0;
     for (let i = 0; i < totalNonOrangeInvaders; i++) {
@@ -93,10 +105,12 @@ function initializeInvaders() {
     }
 }
 
+// Draw the player on the canvas
 function drawPlayer() {
     ctx.drawImage(playerSprite, player.x, player.y, player.width, player.height);
 }
 
+// Draw bullets fired by the player
 function drawBullets() {
     ctx.fillStyle = 'red';
     for (const bullet of bullets) {
@@ -104,6 +118,7 @@ function drawBullets() {
     }
 }
 
+// Draw bullets fired by invaders
 function drawInvaderBullets() {
     ctx.fillStyle = 'purple';
     for (const invBullet of invaderBullets) {
@@ -111,6 +126,7 @@ function drawInvaderBullets() {
     }
 }
 
+// Draw invaders on the canvas
 function drawInvaders() {
     for (const invader of invaders) {
         if (invader.status === 1) {
@@ -125,12 +141,13 @@ function drawInvaders() {
 
     for (const orangeInvader of orangeInvaders) {
         if (orangeInvader.status === 1) {
-            ctx.fillStyle = orangeInvader.isRed ? 'red' : 'orange'; // Change to orange
+            ctx.fillStyle = orangeInvader.isRed ? 'red' : 'orange'; // Orange invader
             ctx.fillRect(orangeInvader.x, orangeInvader.y, invaderWidth, invaderHeight);
         }
     }
 }
 
+// Draw power-ups on the canvas
 function drawPowerUps() {
     ctx.fillStyle = 'blue';
     for (const powerUp of powerUps) {
@@ -138,19 +155,22 @@ function drawPowerUps() {
     }
 }
 
+// Draw the player's score, lives, and ammo on the screen
 function drawScore() {
     ctx.fillStyle = 'white';
     ctx.font = '20px Arial';
     ctx.fillText(`Score: ${player.score}`, 10, 20);
     ctx.fillText(`Lives: ${player.lives}`, 10, 40);
+    ctx.fillText(`Ammo: ${player.ammo}`, 10, 60); // Display ammo
 }
 
-function movePlayer() {
-    player.x += player.dx;
-    player.y += player.dy;
+// Move the player based on input and physics
+function movePlayer(multiplier = 1) {
+    player.x += player.dx * multiplier;
+    player.y += player.dy * multiplier;
 
     if (player.isJumping) {
-        player.dy += player.gravity;
+        player.dy += player.gravity * multiplier;
         if (player.y >= canvas.height - player.height) {
             player.y = canvas.height - player.height;
             player.dy = 0;
@@ -162,35 +182,39 @@ function movePlayer() {
     if (player.x + player.width > canvas.width) player.x = canvas.width - player.width;
 }
 
-function moveBullets() {
+// Move the player's bullets
+function moveBullets(multiplier = 1) {
     for (let i = bullets.length - 1; i >= 0; i--) {
         const bullet = bullets[i];
-        bullet.y -= bullet.speed;
+        bullet.y -= bullet.speed * multiplier;
         if (bullet.y < 0) {
             bullets.splice(i, 1);
         }
     }
 }
 
-function moveInvaderBullets() {
+// Move the invaders' bullets
+function moveInvaderBullets(multiplier = 1) {
     for (let i = invaderBullets.length - 1; i >= 0; i--) {
         const invBullet = invaderBullets[i];
-        invBullet.y += invBullet.speed;
+        invBullet.y += invBullet.speed * multiplier;
         if (invBullet.y > canvas.height) {
             invaderBullets.splice(i, 1);
         }
     }
 }
 
-function movePowerUps() {
+// Move power-ups down the screen
+function movePowerUps(multiplier = 1) {
     for (let i = powerUps.length - 1; i >= 0; i--) {
-        powerUps[i].y += powerUps[i].speed;
+        powerUps[i].y += powerUps[i].speed * multiplier;
         if (powerUps[i].y > canvas.height) {
             powerUps.splice(i, 1);
         }
     }
 }
 
+// Check if the player collects a power-up
 function checkPowerUpCollision() {
     for (let i = powerUps.length - 1; i >= 0; i--) {
         if (player.x < powerUps[i].x + powerUps[i].width &&
@@ -198,16 +222,17 @@ function checkPowerUpCollision() {
             player.y < powerUps[i].y + powerUps[i].height &&
             player.y + player.height > powerUps[i].y) {
 
-            if (powerUps[i].type === 'fasterShooting') {
-                player.shootInterval /= 2; // Example effect
+            if (powerUps[i].type === 'ammo') {
+                player.ammo += 5; // Add 5 ammo when a power-up is collected
             }
 
-            powerUps.splice(i, 1); // Remove power-up after collection
+            powerUps.splice(i, 1); // Remove the power-up after collection
         }
     }
 }
 
-function moveInvaders() {
+// Move invaders and check for player collisions
+function moveInvaders(multiplier = 1) {
     for (const invader of invaders) {
         if (invader.status === 1) {
             if (invader.type === 2) {
@@ -225,10 +250,10 @@ function moveInvaders() {
                 }
             } else if (invader.type === 3) {
                 // Type 3 - Moving invader
-                invader.x += invader.dx;
+                invader.x += invader.dx * multiplier;
                 // Random vertical movement for diversity
                 if (Math.random() < 0.01) {
-                    invader.y += Math.random() > 0.5 ? 5 : -5;
+                    invader.y += (Math.random() > 0.5 ? 5 : -5) * multiplier;
                 }
                 if (invader.x + invaderWidth > canvas.width || invader.x < 0) {
                     invader.dx *= -1;
@@ -254,7 +279,15 @@ function moveInvaders() {
     for (const orangeInvader of orangeInvaders) {
         if (orangeInvader.status === 1) {
             // Type 1 - Charging invader
-            orangeInvader.y += orangeInvader.chargeSpeed;
+            // Aim towards the player's x position
+            if (orangeInvader.x + invaderWidth / 2 < player.x + player.width / 2) {
+                orangeInvader.x += orangeInvader.chargeSpeed * multiplier;
+            } else if (orangeInvader.x + invaderWidth / 2 > player.x + player.width / 2) {
+                orangeInvader.x -= orangeInvader.chargeSpeed * multiplier;
+            }
+
+            orangeInvader.y += orangeInvader.chargeSpeed * multiplier;
+
             if (orangeInvader.y + invaderHeight >= canvas.height) {
                 orangeInvader.y = canvas.height - invaderHeight;
                 orangeInvader.isRed = true; // Turn red when hitting the floor
@@ -272,6 +305,7 @@ function moveInvaders() {
     }
 }
 
+// Check for collisions between bullets, invaders, and the player
 function collisionDetection() {
     for (const invader of invaders) {
         if (invader.status === 1) {
@@ -282,14 +316,7 @@ function collisionDetection() {
                     bullets.splice(i, 1);
                     invader.status = 0;
                     player.score += 100; // Increase score when an invader is defeated
-                    // Replace defeated invader with a new one
-                    let type;
-                    if (invader === flashingInvader) {
-                        type = 2; // Keep it flashing if it was the flashing invader
-                    } else {
-                        type = 3;
-                    }
-                    Object.assign(invader, createInvader(type));
+                    Object.assign(invader, createInvader(invader === flashingInvader ? 2 : 3));
                 }
             }
         }
@@ -304,7 +331,6 @@ function collisionDetection() {
                     bullets.splice(i, 1);
                     orangeInvader.status = 0;
                     player.score += 150; // Increase score for orange invaders
-                    // Replace defeated orange invader with a new one
                     Object.assign(orangeInvader, createInvader(1));
                 }
             }
@@ -315,7 +341,11 @@ function collisionDetection() {
                 orangeInvader.y + invaderHeight > player.y) {
                 player.lives--; // Decrease lives if hit
                 orangeInvader.status = 0; // Deactivate the invader
-                if (player.lives <= 0) {
+                
+                if (player.lives > 0) {
+                    isSlowedDown = true;
+                    slowdownTimer = slowdownDuration;
+                } else {
                     alert("Game Over! You've been hit by a charging invader.");
                     document.location.reload();
                 }
@@ -323,13 +353,16 @@ function collisionDetection() {
         }
     }
 
-    // Check collision between invader bullets and player
     for (const invBullet of invaderBullets) {
         if (invBullet.x > player.x && invBullet.x < player.x + player.width &&
             invBullet.y > player.y && invBullet.y < player.y + player.height) {
             player.lives--; // Decrease lives if hit
             invaderBullets.splice(invaderBullets.indexOf(invBullet), 1); // Remove the bullet
-            if (player.lives <= 0) {
+
+            if (player.lives > 0) {
+                isSlowedDown = true;
+                slowdownTimer = slowdownDuration;
+            } else {
                 alert("Game Over! You've been hit by an invader bullet.");
                 document.location.reload();
             }
@@ -337,12 +370,15 @@ function collisionDetection() {
     }
 }
 
+// Update the game state every frame
 function update() {
-    movePlayer();
-    moveBullets();
-    moveInvaderBullets();
-    moveInvaders();
-    movePowerUps();
+    const speedMultiplier = isSlowedDown ? slowdownFactor : 1;
+
+    movePlayer(speedMultiplier);
+    moveBullets(speedMultiplier);
+    moveInvaderBullets(speedMultiplier);
+    moveInvaders(speedMultiplier);
+    movePowerUps(speedMultiplier);
     checkPowerUpCollision();
     collisionDetection();
 
@@ -353,25 +389,34 @@ function update() {
         }
     }
 
-    // Player continuous shooting
+    if (isSlowedDown) {
+        slowdownTimer--;
+        if (slowdownTimer <= 0) {
+            isSlowedDown = false;
+        }
+    }
+
+    // Player continuous shooting by holding spacebar
     player.shootTimer++;
-    if (player.shootTimer >= player.shootInterval) {
+    if (player.shootTimer >= player.shootInterval && player.ammo > 0 && player.isShooting) {
         player.shootTimer = 0;
         bullets.push({
             x: player.x + player.width / 2 - 2.5,
             y: player.y,
             width: 5,
             height: 10,
-            speed: 7
+            speed: 7 * speedMultiplier
         });
+        player.ammo--; // Decrease ammo by 1 for each shot
     }
 
     // Randomly generate power-ups
-    if (Math.random() < 0.001) {
+    if (Math.random() < 0.01) {
         powerUps.push(createPowerUp());
     }
 }
 
+// Draw the game state every frame
 function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     if (!blackout) {
@@ -387,12 +432,14 @@ function draw() {
     }
 }
 
+// The main game loop that updates and draws the game state
 function loop() {
     update();
     draw();
     requestAnimationFrame(loop);
 }
 
+// Handle key down events for player movement and shooting
 function keyDown(e) {
     if (e.key === 'ArrowRight') {
         player.dx = player.speed;
@@ -400,18 +447,25 @@ function keyDown(e) {
         player.dx = -player.speed;
     } else if (e.key === 'Control' && !player.isJumping) {
         player.isJumping = true;
-        player.dy = -10;
+        player.dy = -15;
+    } else if (e.key === ' ') { // Spacebar for shooting
+        player.isShooting = true;
     }
 }
 
+// Handle key up events for stopping player movement and shooting
 function keyUp(e) {
     if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
         player.dx = 0;
+    } else if (e.key === ' ') { // Stop shooting when spacebar is released
+        player.isShooting = false;
     }
 }
 
+// Attach event listeners for keyboard input
 document.addEventListener('keydown', keyDown);
 document.addEventListener('keyup', keyUp);
 
+// Initialize the game and start the game loop
 initializeInvaders();
 loop();
