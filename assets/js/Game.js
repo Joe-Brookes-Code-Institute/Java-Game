@@ -41,6 +41,9 @@ canvas.height = 800;
 const playerSprite = new Image();
 playerSprite.src = 'assets/images/player-sprite.png';
 
+
+
+
 // Load invader sprites
 const invaderSprite = new Image();
 invaderSprite.src = 'assets/images/invader-sprite.png';
@@ -55,6 +58,13 @@ backgroundImage.src = 'assets/images/background.png';
 // Background scroll variables
 let bgY = 0;
 const bgScrollSpeed = 1; // Adjust the speed of the scrolling background
+
+// Variables for sprite switching
+let spriteSwitchTimer = 0;
+let currentPlayerSpriteIndex = 0;
+let currentInvaderSpriteIndex = 0;
+const spriteSwitchInterval = 500; // 500 milliseconds = 0.5 seconds
+
 
 // Player object with properties including ammo
 const player = {
@@ -86,8 +96,8 @@ const powerUps = []; // Array for power-ups
 // Constants for invader behavior
 const maxFallingOrangeInvaders = 1; // Maximum number of orange invaders falling at once
 const totalNonOrangeInvaders = 5; // Total number of non-orange invaders
-const invaderWidth = 60;
-const invaderHeight = 60;
+const invaderWidth = 60; //has no effect
+const invaderHeight = 60; //has no effect
 const invaderSpeed = 1;
 
 // Flags for game states
@@ -103,10 +113,27 @@ const POWER_UP_PROBABILITY = 0.01; // Probability of generating a power-up
 // Create a new invader object
 // Constants for invader sizes
 const invaderSizes = {
-    1: { width: 38, height: 70 }, // Orange invader
+    1: { width: 60, height: 60 }, // Orange invader
     2: { width: 50, height: 60 }, // Flashing invader
     3: { width: 60, height: 70 }  // Standard invader
 };
+
+function update(deltaTime) {
+    // Update the timer
+    spriteSwitchTimer += deltaTime;
+
+    // Check if half a second has passed
+    if (spriteSwitchTimer >= spriteSwitchInterval) {
+        // Reset the timer
+        spriteSwitchTimer = 0;
+
+        // Toggle the sprite index between 0 and 1
+        currentPlayerSpriteIndex = (currentPlayerSpriteIndex + 1) % playerSprites.length;
+        currentInvaderSpriteIndex = (currentInvaderSpriteIndex + 1) % invaderSprites.length;
+    }
+
+    // Other update logic...
+}
 
 // Create a new invader object with different sizes
 function createInvader(type) {
@@ -126,28 +153,26 @@ function createInvader(type) {
     };
 }
 
-// Draw invaders on the canvas with their respective sizes
 function drawInvaders() {
     for (const invader of invaders) {
         if (invader.status === 1) {
-            if (invader.type === 2) {
-                ctx.fillStyle = invader.flashTimer % 2 === 0 ? 'yellow' : 'orange'; // Flashing invader
-            } else {
-                ctx.fillStyle = 'white'; // Standard invader
-            }
-            ctx.drawImage(invaderSprite, invader.x, invader.y, invader.width, invader.height);
-        
-                
+            ctx.drawImage(orangeInvaderSprites[currentInvaderSpriteIndex], invader.x, invader.y, invader.width, invader.height);
         }
     }
+
+    // Draw orange invaders with sprite switching based on type
     for (const orangeInvader of orangeInvaders) {
         if (orangeInvader.status === 1) {
-            ctx.fillStyle = orangeInvader.isRed ? 'red' : 'orange'; // Orange invader
-            ctx.fillRect(orangeInvader.x, orangeInvader.y, orangeInvader.width, orangeInvader.height);
-            
+            // Assume `type` is an integer where 0 means one sprite and 1 means another
+            const spriteIndex = orangeInvader.type % 2; // Alternates between 0 and 1 based on type
+            const sprite = orangeInvaderSprites[spriteIndex];
+            ctx.drawImage(sprite, orangeInvader.x, orangeInvader.y, orangeInvader.width, orangeInvader.height);
         }
     }
 }
+
+        
+
 
 // Create a new power-up object that grants ammo
 function createPowerUp() {
@@ -429,8 +454,17 @@ function collisionDetection() {
     }
 }
 
-// Update the game state every frame
-function update() {
+// Update the game state, including sprite switching
+function update(deltaTime) {
+    // Update the sprite switch timer
+    spriteSwitchTimer += deltaTime;
+
+    // Check if half a second has passed for sprite switching
+    if (spriteSwitchTimer >= spriteSwitchInterval) {
+        spriteSwitchTimer = 0;
+        currentPlayerSpriteIndex = (currentPlayerSpriteIndex + 1) % playerSprites.length;
+        currentInvaderSpriteIndex = (currentInvaderSpriteIndex + 1) % invaderSprites.length;
+    }
     
     const speedMultiplier = isSlowedDown ? slowdownFactor : 1;
     movePlayer(speedMultiplier);
@@ -491,13 +525,16 @@ function draw() {
 
 
 // The main game loop that updates and draws the game state
-// Main game loop
-function loop() {
-    update();
+let lastTime = 0;
+function loop(currentTime) {
+    const deltaTime = currentTime - lastTime; // Time elapsed since the last frame
+    lastTime = currentTime;
+
+    update(deltaTime);
     draw();
+
     requestAnimationFrame(loop);
 }
-
 // Handle key down events for player movement and shooting
 function keyDown(e) {
     if (e.key === 'ArrowRight') {
@@ -528,5 +565,7 @@ document.addEventListener('keyup', keyUp);
 
 
 // Initialize the game and start the game loop
+// Start the game loop
 initializeInvaders();
-loop();
+lastTime = performance.now();
+requestAnimationFrame(loop);
