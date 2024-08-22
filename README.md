@@ -1,5 +1,5 @@
 # Lair Assault
-
+https://joe-brookes-code-institute.github.io/Java-Game/
 **Lair Assault** is an overhead shooter where players must dodge bullets while firing back at enemies to increase their score.
 
 ![Game Screenshot](/workspace/Java-Game/assets/images/Picture1.png)
