@@ -1,70 +1,89 @@
 # Lair Assault
- learn assault is an overhead shooter in which the player must move back and forth while avoiding bullet  while firing back in order to increase their score
- ![game]/workspace/Java-Game/assets/images/Picture1.png)
-Features
-The player can move left and right to avoid fire, they must also collect ammo to fire back.
-A run button can be used to try and avoid charging enemies or speed up to grab ammo.
-They have 3 lives
-Touch Screen controls can be used for mobile phones
-The screen is set to work across devices offering the same core play.
-For keyboard left and right are used to move while Ctrl and Space are used to run and shoot.
-![Bar](/workspace/Java-Game/assets/images/Picture2.png) 
-They are placed in a way to allow the player to move with their left thumb and run/shoot with their right.
-Core gameplay feel
- ![feel](/workspace/Java-Game/assets/images/Picture3.png)
-When shot the game slows down slightly to let the player know they’ve take a hit, this should feel somewhat bad for the player as their character no longer controls smoothly 
 
-Ammo
-  ![Crate](Picture5.png)
-![Crate](Picture4.png) 
-Must be collected for the player to shoot
-Shooters
- ![Foe](Picture6.png)
+**Lair Assault** is an overhead shooter where players must dodge bullets while firing back at enemies to increase their score.
 
-Fire on the player
+![Game Screenshot](/workspace/Java-Game/assets/images/Picture1.png)
 
-![Bomb](Picture7.png)
-Bombs
- 
-Move towards the player, can be shot or dodged
+## Features
 
-UX
-The game uses a clear mix of blacks, reds and whites, with purple being used for enemy fire
+- **Player Movement**: Move left and right to dodge enemy fire.
+- **Ammo Collection**: Collect ammo to shoot back at enemies.
+- **Run Button**: Use it to evade charging enemies or speed up to collect ammo.
+- **Lives**: The player has 3 lives.
+- **Touch Screen Controls**: Available for mobile play.
+- **Cross-Device Compatibility**: The game is optimized for a consistent experience across devices.
+- **Keyboard Controls**: 
+  - Move: Left and right arrow keys.
+  - Run: Ctrl key.
+  - Shoot: Space key.
 
-Wire Frames
- ![Arcade](Picture8.png)
-It resembles some classic shooter arcade machines so it’s longer than it is wider.
-This should work with a number of devices.
+![Control Layout](/workspace/Java-Game/assets/images/Picture2.png)
 
-Features Left to Implement
-Many features didn’t make the cut or were unfinished.
-Two enemy types one finished but left on the cutting room floor due to implementation problems
-He’s still in the game but his functions have been switched off, can you spot him
-A scrolling background was planned, the bombs would flash and when shot were meant to blow up, the flashing animation was finished but code issues meant it had to be left out.
-Stages would have seen enemy types change and ammo and speed change.
-A intro screen was finished, implement and then lost and couldn’t be recovered in time for deployment.
-Saving scores was planned and cut due to time.
+- Controls are designed for ease of use: move with the left thumb, and run/shoot with the right thumb on mobile devices.
 
- 
-  
+## Core Gameplay Feel
 
+![Gameplay Feel](/workspace/Java-Game/assets/images/Picture3.png)
 
+- **Hit Feedback**: When hit, the game slows down slightly, indicating damage and impairing player control, creating a sense of urgency.
 
-Testing
-![Atest](Picture9.png)
-![btest](Picture10.png)
-![ctest](Picture11.png)
-•	Wave was used for quality assurance and contrast issues
-•	Lighthouse was used for non-functional testing
-Unfixed Bugs
-When the player dies they may have the game over screen appear more than once before the game resets
-Content
-•	Code Institute student template for Gitpod  was a starting point
-•	PerplexityAI  and ChatGPT were used to produce code and also provide direction
-•	Stable Defuse was used to produce the sprites and artwork,
-About
-Lair Assault by- Joe Brookes
-•	https://github.com/Joe-Brookes-Code-Institute
+## Ammo
 
+![Ammo Crate](/workspace/Java-Game/assets/images/Picture4.png)
+![Ammo Crate](/workspace/Java-Game/assets/images/Picture5.png)
 
+- **Ammo Collection**: Players must collect crates to be able to shoot.
 
+## Enemies
+
+![Shooter](/workspace/Java-Game/assets/images/Picture6.png)
+
+- **Shooters**: These enemies fire directly at the player.
+
+![Bomb](/workspace/Java-Game/assets/images/Picture7.png)
+
+- **Bombs**: These move toward the player and can be either shot or dodged.
+
+## User Experience (UX)
+
+- **Color Scheme**: The game features a clear mix of blacks, reds, and whites, with purple used for enemy fire.
+
+## Wireframes
+
+![Arcade Style](/workspace/Java-Game/assets/images/Picture8.png)
+
+- The game layout resembles classic shooter arcade machines, being longer than it is wide, which enhances its adaptability to various devices.
+
+## Features Left to Implement
+
+Several planned features were either unfinished or cut:
+
+- **Additional Enemy Types**: One was completed but disabled due to implementation issues. It's still in the game but not active—can you spot it?
+- **Scrolling Background**: Planned but cut due to coding issues.
+- **Stages**: These would have included varying enemy types and different ammo and speed settings.
+- **Intro Screen**: Developed but lost before deployment.
+- **Score Saving**: Cut due to time constraints.
+
+## Testing
+
+![Testing A](/workspace/Java-Game/assets/images/Picture9.png)
+![Testing B](/workspace/Java-Game/assets/images/Picture10.png)
+![Testing C](/workspace/Java-Game/assets/images/Picture11.png)
+
+- **Quality Assurance**: Wave was used for quality assurance, focusing on contrast issues.
+- **Non-Functional Testing**: Lighthouse was used for performance and other non-functional tests.
+
+### Unfixed Bugs
+
+- **Game Over Screen**: Occasionally, it may appear multiple times before the game resets.
+
+## Content and Tools Used
+
+- **Template**: Code Institute's student template for Gitpod was used as a starting point.
+- **AI Assistance**: PerplexityAI and ChatGPT were utilized for coding and guidance.
+- **Artwork**: Created using Stable Diffusion.
+
+## About
+
+**Lair Assault** by Joe Brookes  
+GitHub: [Joe-Brookes-Code Institute](https://github.com/Joe-Brookes-Code-Institute)
